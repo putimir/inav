@@ -538,7 +538,11 @@ void handleSmartPortTelemetry(void)
             }
         }
 
-        if (cmpTimeUs(micros(), lastTelemetryFrameReceivedUs) >= SMARTPORT_MIN_TELEMETRY_RESPONSE_DELAY_US) {
+        // XXX: Checking for lastTelemetryFrameReceivedUs == 0 is needed for S.Port, since payload will
+        // only be non-null (and hence, lastTelemetryFrameReceivedUs will be updated) when using FPort.
+        // If it's kept at zero, cmpTimeUs() result will overflow after 2147 seconds (35:47) and telemetry
+        // will stop working.
+        if (lastTelemetryFrameReceivedUs == 0 || cmpTimeUs(micros(), lastTelemetryFrameReceivedUs) >= SMARTPORT_MIN_TELEMETRY_RESPONSE_DELAY_US) {
             processSmartPortTelemetry(payload, &clearToSend, &requestTimeout);
             payload = NULL;
         }
